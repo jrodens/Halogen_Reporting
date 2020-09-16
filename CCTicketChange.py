@@ -34,26 +34,11 @@ countaccepted=0
 Moved = []
 Tddmoved = []
 #represents the 9 applications part of the cutover apps for filtered view
-cutoverapps = ['Broadridge', 'Cougar', 'FID', 'Falcon', 'Nucleus', 'Perform', 'COIL', 'Cash Forecasting Database', 'Equity Quant', 'Hedgehog']
 
 todaysday = datetime.datetime.today().strftime("%A")
 
-if todaysday == 'Monday':
-    lastrun = now - datetime.timedelta(3)
-elif todaysday == 'Tuesday':
-    lastrun = now - datetime.timedelta(1)
-elif todaysday == 'Wednesday':
-    lastrun = now - datetime.timedelta(2)
-elif todaysday == 'Thursday':
-    lastrun = now - datetime.timedelta(1)
-elif todaysday == 'Friday':
-    lastrun = now - datetime.timedelta(2)
-elif todaysday == 'Saturday':
-    lastrun = now - datetime.timedelta(1)
-elif todaysday == 'Sunday':
-    lastrun = now - datetime.timedelta(2)
-else:
-    print('error')
+
+lastrun = now - datetime.timedelta(2)
 #print(lastrun)
 #prompt user for authorization and authorize user
 username = input('Enter your user name: ')
@@ -61,7 +46,7 @@ password = getpass.getpass(prompt='Enter your password: ')
 jira = JIRA(basic_auth = (username, password), options = {'server': 'https://jira.troweprice.com'})
 
 #collect data from JIRA API
-temp = jira.search_issues('project = NYC-IO-Surge-Testing and "Epic Link" = NYCTT-1026 and Criticality = "Must Have"',maxResults=10000)
+temp = jira.search_issues('project = NYC-IO-Surge-Testing AND "Consumer Application (NYCTT)" is not EMPTY',maxResults=10000)
 #temp = pd.DataFrame.from_dict(datafromjson)
 
 #temp.to_excel('O:/apidf.xlsx')
@@ -82,15 +67,8 @@ for issue in temp:
     ticket = issue.key
     #print(f'The ticket is : {ticket}')
     status = S(issue.fields.status.name)
-    synthesis = issue.fields.customfield_17001
-    tdd = issue.fields.customfield_21501
-#    age = now - datetime.datetime.strptime(temp.fields.created[0:10], '%Y-%m-%d')
     summary = issue.fields.summary
-    projects_impacted = issue.fields.customfield_21202
-    labels=issue.fields.labels
-    service=issue.fields.customfield_21800
-    criticality = issue.fields.customfield_19700.value
-    criticality=S(criticality)
+    consumer = issue.fields.customfield_23201.value
     url = 'https://jira.troweprice.com/rest/api/2/issue/' + ticket + '?expand=changelog'
     issuefromjson= jira.issue(ticket, expand='changelog')
     changelog = issuefromjson.changelog
@@ -108,44 +86,24 @@ for issue in temp:
                 #moved = moved + str(f'Moved from {item.fromString} to {item.toString}')
                 #print(moved)
                 moved = str(f'Moved from {item.fromString} to {item.toString}')
+                print(f'{ticket} FOR {summary} FROM {item.fromString} TO {item.toString} FOR {consumer}')
                 #print (item.toString) # new value
                 #print (item.fromString) # old value
-            if (item.field == "Target Delivery Date") & (normaldate >= lastrun):
-                tddmoved = str(f'Moved from {item.fromString} to {item.toString}')
-    if issue.fields.customfield_23201 is None:
-        pass
-    else:
-        application = issue.fields.customfield_23201.value
-        application=S(application)
-        Application.append(application)
+'''
         Ticket.append(ticket)
         Status.append(status)
         #Age.append(age.days)
         Summary.append(summary)
-        TDD.append(tdd)
-        Synthesis.append(synthesis)
-        Labels.append(labels)
-        Projects_Impacted.append(projects_impacted)
-        Service.append(service)
-        Criticality.append(criticality)
         Moved.append(moved)
-        Tddmoved.append(tddmoved)
 
 print(f'Finished in api call in {round(time.perf_counter()-rightnow, 2)} seconds')
 rightnow=time.perf_counter()
 newdata=pd.DataFrame()
-newdata.insert(0,"Application", Application)
 newdata.insert(1,"Ticket", Ticket)
 newdata.insert(2,"Status", Status)
-newdata.insert(3,"Target Delivery Date", TDD)
 newdata.insert(4, "Synthesis", Synthesis)
-#newdata.insert(5,"Criticality", Criticality)
 newdata.insert(5,"Status Changed To", Moved)
-newdata.insert(6,"Target Date Changed To", Tddmoved)
 
-newdata=newdata.loc[newdata['Application'].isin(cutoverapps)]
-#newdata.explode('Projects Impacted')
-#newdata.insert(10, "Dev Ticket", Linked)
 
 
 open = newdata[(newdata.Status!='Accepted')&(newdata.Status!='Rejected')]
@@ -161,10 +119,10 @@ summary=summary.replace(to_replace="Prioritized", value="Open and Triage")
 summary=summary.replace(to_replace="In Triage", value="Open and Triage")
 summary=summary.replace(to_replace="Needs Information", value="Open and Triage")
 #summary= summary.replace(to_replace="Dev", value="Open and Triage")
-open=open.sort_values(by=['Application'], ascending=[True])
-rejected=rejected.sort_values(by=['Application'], ascending=[True])
-accepted=accepted.sort_values(by=['Application'], ascending=[True])
-summary = summary.groupby(['Status','Application']).size()
+open=open.sort_values(by=['Ticket'], ascending=[True])
+rejected=rejected.sort_values(by=['Ticket'], ascending=[True])
+accepted=accepted.sort_values(by=['Ticket'], ascending=[True])
+summary = summary.groupby(['Status','Ticket']).size()
 summary = summary.unstack()
 summary = summary.fillna(0)
 summary = summary.transpose()
@@ -228,4 +186,5 @@ with pd.ExcelWriter(filename) as writer:
     #worksheet4.set_column('D:D', 5.57,formater)
 print(f'Total time of {round(time.perf_counter()-start, 2)} seconds')
 print(f'Your report has been saved in {filename}')
+'''
 print('Done!')
