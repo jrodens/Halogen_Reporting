@@ -8,27 +8,16 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from pandas.io.json import json_normalize
 import time
-import datetime
 
-start = time.perf_counter()
-'''
-The design of this report is to take two data sets, the attributes on the dev board (nycrs) and the views on the analysis board (nycrsa) and joining the two together.
-The result is aggergated and sized by quartile for graphing within a pdf
-'''
 #Get User credentials for JIRA authorization
 username = input('Enter your user name: ')
 password = getpass.getpass(prompt="Enter Password")
 jira = JIRA(basic_auth = (username, password), options = {'server': 'https://jira.troweprice.com'})
 
-starttimetoload= time.perf_counter()
 #Utilize Jira search function to identify any views on the Analyst board that links to the Halogen View epic
-datafromjson = jira.search_issues('project = NYC-RIO-Surge-Halogen-Analysis and "Epic Link" = NYCRSA-489', maxResults=300)
-finishtimetoload= time.perf_counter()
-print(f'Finished in loading datafromjson in {round(finishtimetoload-starttimetoload, 2)} seconds')
+datafromjson = jira.search_issues('project = NYC-RIO-Surge-Halogen-Analysis and "Epic Link" = NYCRSA-489 and labels  = transactions_view', maxResults=100)
 datafromjson2 = requests.get('https://jira.troweprice.com/rest/api/2/search?jql=project%20=%20NYC-RIO-Surge-Halogen%20and%20component%20=%20%22transactions%20Domain%22&maxResults=1000&fields=status', auth=(username, password)).content
-now = time.perf_counter()
-print(f'Finished in loading datafromjson2 in {round(now-finishtimetoload, 2)} seconds')
-print(f'Finished in loading data in {round(now-starttimetoload, 2)} seconds')
+
 datafromjson2 = pd.read_json(datafromjson2, typ='series', orient='columns')
 datafromjson2=json_normalize(datafromjson2['issues'],meta=['fields.status.name'])
 
@@ -82,9 +71,8 @@ newdata=newdata.replace(to_replace="Dev", value="In Development")
 newdata = newdata.groupby(['Story','Status']).size()
 
 color_dict = {'Accepted':'#7030A0','Blocked':'#FFC000','In Development':'#002060','Not Started':'#C00000','QA':'#548235','Rejected':'#808080'}
-output = 'C:\\Users\\' + username + '\\OneDrive - TRowePrice\\TransactionAttributes-'+ str(datetime.datetime.today().strftime('%Y%m%d')) +'.pdf'
-#output = 'O:/TransactionAttributes.pdf'
-pdf = PdfPages('O:/TransactionAttributes.pdf')
+output = 'O:/TransactionAttributes.pdf'
+pdf = PdfPages('O:/PositionAttributes.pdf')
 fig1 = plt.figure()
 
 with PdfPages(output) as pdf:
@@ -94,6 +82,4 @@ with PdfPages(output) as pdf:
 
     pdf.savefig(fig1, orientation='landscape', bbox_inches="tight")
 
-print(f'Total time: {round(time.perf_counter()-start, 2)} seconds')
-print(f'Your pdf has been saved in {output}')
 print("Done!")

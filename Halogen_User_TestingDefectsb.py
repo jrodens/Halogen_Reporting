@@ -16,7 +16,7 @@ password = getpass.getpass(prompt="Enter Password")
 jira = JIRA(basic_auth = (username, password), options = {'server': 'https://jira.troweprice.com'})
 
 #Utilize Jira search function to identify any views on the Analyst board that links to the Halogen View epic
-datafromjson = jira.search_issues('project ="NYCRHT"  AND issuetype = Defect', maxResults=1000)
+datafromjson = jira.search_issues('project ="HUT"  AND issuetype = Defect', maxResults=1000)
 #testcasesfromjson = jira.search_issues('project = "NYCRHT" AND issuetype= "Task" AND status != "Rejected"', maxResults=1000)
 
 #Class to give a string for comparing strings to string-like variables
@@ -58,7 +58,7 @@ Entry=[]
 graphbygroup = pd.DataFrame()
 testdf = pd.DataFrame()
 
-startdate = datetime.datetime(2020, 2, 12)
+startdate = datetime.datetime(2020, 3, 10)
 
 Dates = []
 DefectCount = []
@@ -66,9 +66,11 @@ TestStatus = []
 Group = []
 Transtype = []
 Story = []
-
+Createdate=[]
 History = pd.DataFrame()
-
+Review = pd.DataFrame()
+ticket = []
+accepteddate=[]
 
 todaysdate = datetime.datetime.now()
 yesterday = todaysdate - datetime.timedelta(1)
@@ -144,16 +146,26 @@ for issue in datafromjson:
             dated = datetime.datetime.strptime(history.created[0:10], '%Y-%m-%d')
             if (item.field == "status") & ((S(item.toString) == "Accepted") or (S(item.toString) == "Rejected")):
                 acceptdate = dated
-    vardate = datetime.datetime(2020, 2, 12)
+                #print(f'{currentID}:{acceptdate}')
+    Createdate.append(createdate)
+    ticket.append(currentID)
+    accepteddate.append(acceptdate)
+Review.insert(0,"Ticket", ticket)
+Review.insert(1,  "Accepted", accepteddate)
+Review.insert(2, "Created", Createdate)
+Review = Review.drop_duplicates(subset='Ticket', keep='last')
+Review.to_excel('O:/test.xlsx')
+
+for index, row in Review.iterrows():
+    vardate = datetime.datetime(2020, 3, 10)
     i=-1
-    while (acceptdate>=vardate):
-        if (vardate < createdate):
+    while (Review.iloc[index,1]>=vardate):
+        if (vardate < Review.iloc[index,2]):
             vardate = vardate + datetime.timedelta(1)
             if (datetime.datetime.strftime(vardate, '%A') != 'Saturday') and (datetime.datetime.strftime(vardate, '%A') != 'Sunday'):
                 i=i+1
         else:
             if (datetime.datetime.strftime(vardate, '%A') != 'Saturday') and (datetime.datetime.strftime(vardate, '%A') != 'Sunday'):
-                print(i)
                 DefectCount[i] = DefectCount[i] + 1
                 i=i+1
             else:
@@ -162,18 +174,17 @@ for issue in datafromjson:
             vardate = vardate + datetime.timedelta(1)
 
 print('Finished grabbing data; traisitioning to dataframe')
+print(DefectCount)
 #open = newdata[(newdata.Status!='Accepted')&(newdata.Status!='Rejected')]
 
 
 newdata=pd.DataFrame()
 newdata.insert(0,"Defects by Transaction Type", Transaction)
 newdata.insert(1, "Status", Ticketstatus)
-newdata = newdata.replace(to_replace="Open", value="Open")
-newdata = newdata.replace(to_replace="Dev", value="Open")
-newdata = newdata.replace(to_replace="Prioritized", value="Open")
-newdata = newdata.replace(to_replace="Ready for Prioritization", value="Open")
-newdata = newdata.replace(to_replace="Blocked", value="Open")
-color_dict = {'Accepted':'#7030A0','Blocked':'#FFC000','In Progress':'#002060','Open':'#C00000','QA':'#548235','Rejected':'#808080'}
+newdata = newdata.replace(to_replace="Open", value="Not Started")
+newdata = newdata.replace(to_replace="Dev", value="In Progress")
+newdata = newdata.replace(to_replace="Prioritized", value="Not Started")
+color_dict = {'Accepted':'#7030A0','Blocked':'#FFC000','In Progress':'#002060','Not Started':'#C00000','QA':'#548235','Rejected':'#808080'}
 output = 'C:\\Users\\' + username + '\\OneDrive - TRowePrice\\Halogen Test Metrics-'+ str(datetime.datetime.today().strftime('%Y%m%d')) +'.pdf'
 
 tempdf= pd.DataFrame()
@@ -193,13 +204,13 @@ with PdfPages(output) as pdf:
         axis.set_major_locator(ticker.MaxNLocator(integer=True))
     ax4.legend(fontsize='xx-small', frameon=False)
     ax4.set_ylabel("Defect Count", fontsize=6)
-    ax4.set_xlabel("Transaction Type", fontsize=6)
-    ax4.set_title("Defects by Transaction Type", fontsize=7)
+    ax4.set_xlabel("Domain", fontsize=6)
+    ax4.set_title("Defects by Domain", fontsize=7)
     ax4.tick_params(axis='x', labelsize=5)
     ax4.tick_params(axis='y', labelsize=5)
 
     ax5 = plt.plot(Dates, DefectCount)
-    plt.xlabel("Date",labelpad = 23,fontsize=6)
+    plt.xlabel("Date",labelpad = 6,fontsize=6)
     plt.ylabel("Number of Open Defects", fontsize=6)
     plt.title("Open Defects by Date",fontsize=7)
     plt.tick_params(axis='x', rotation=70, labelsize=5)

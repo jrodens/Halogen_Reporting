@@ -22,10 +22,10 @@ jira = JIRA(basic_auth = (username, password), options = {'server': 'https://jir
 
 starttimetoload= time.perf_counter()
 #Utilize Jira search function to identify any views on the Analyst board that links to the Halogen View epic
-datafromjson = jira.search_issues('project = NYC-RIO-Surge-Halogen-Analysis and "Epic Link" = NYCRSA-489', maxResults=300)
+datafromjson = jira.search_issues('project = NYC-RIO-Surge-Halogen-Analysis and "Epic Link" = NYCRSA-1566', maxResults=300)
 finishtimetoload= time.perf_counter()
 print(f'Finished in loading datafromjson in {round(finishtimetoload-starttimetoload, 2)} seconds')
-datafromjson2 = requests.get('https://jira.troweprice.com/rest/api/2/search?jql=project%20=%20NYC-RIO-Surge-Halogen%20and%20component%20=%20%22transactions%20Domain%22&maxResults=1000&fields=status', auth=(username, password)).content
+datafromjson2 = requests.get('https://jira.troweprice.com/rest/api/2/search?jql=project%20=%20NYC-RIO-Surge-Halogen%20and%20component%20=%20%22party%20Domain%22&maxResults=1000&fields=status', auth=(username, password)).content
 now = time.perf_counter()
 print(f'Finished in loading datafromjson2 in {round(now-finishtimetoload, 2)} seconds')
 print(f'Finished in loading data in {round(now-starttimetoload, 2)} seconds')
@@ -82,15 +82,15 @@ newdata=newdata.replace(to_replace="Dev", value="In Development")
 newdata = newdata.groupby(['Story','Status']).size()
 
 color_dict = {'Accepted':'#7030A0','Blocked':'#FFC000','In Development':'#002060','Not Started':'#C00000','QA':'#548235','Rejected':'#808080'}
-output = 'C:\\Users\\' + username + '\\OneDrive - TRowePrice\\TransactionAttributes-'+ str(datetime.datetime.today().strftime('%Y%m%d')) +'.pdf'
+output = 'C:\\Users\\' + username + '\\OneDrive - TRowePrice\\PartyAttributes-'+ str(datetime.datetime.today().strftime('%Y%m%d')) +'.pdf'
 #output = 'O:/TransactionAttributes.pdf'
-pdf = PdfPages('O:/TransactionAttributes.pdf')
+pdf = PdfPages('O:/Party.pdf')
 fig1 = plt.figure()
 
 with PdfPages(output) as pdf:
     ax1=fig1.add_subplot(111)
     newdata=newdata.unstack()
-    newdata.plot(ax=ax1,kind='bar',stacked=True, figsize=(20,10),color=[color_dict.get(x) for x in newdata.columns], title="Transaction Views")
+    newdata.plot(ax=ax1,kind='bar',stacked=True, figsize=(20,10),color=[color_dict.get(x) for x in newdata.columns], title="Party")
 
     pdf.savefig(fig1, orientation='landscape', bbox_inches="tight")
 
