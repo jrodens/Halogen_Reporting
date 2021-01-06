@@ -9,7 +9,6 @@ from matplotlib.backends.backend_pdf import PdfPages
 from pandas.io.json import json_normalize
 import time
 import datetime
-import plotly.express as px
 import matplotlib.patches as patches
 import numpy as np
 start = time.perf_counter()
@@ -109,22 +108,7 @@ tempdf=pd.DataFrame()
 color_dict = {'Accepted':'#7030A0','Dev': '#4472C4', 'Prioritized': '#C00000', 'Ready For Prioritization': '#002060', 'Blocked':'#FFC000','In Progress':'#002060','Not Started':'#C00000','QA':'#548235','Rejected':'#808080'}
 
 today= datetime.datetime(2020,10,16,0,0)
-'''
-output = 'O:/IDW2Gantt.pdf'
-with PdfPages(output) as pdf:
-    fig2= plt.figure()
-    ax2= fig2.add_subplot(111)
 
-    ax2.update_yaxes(autorange='reversed')
-    fig2.update_layout(shapes=[
-    	dict(
-    		type='line',
-    		yref='paper', y0=0, y1=1,
-    		xref='x', x0=today, x1=today
-    		)
-    	])
-    fig2.savefig('O:/IDW2Gantt.pdf', orientation='landscape', bbox_inches='tight')
-'''
 tempdf2 = pd.DataFrame()
 i=0
 today = datetime.datetime.today()
