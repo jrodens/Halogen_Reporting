@@ -99,7 +99,7 @@ milestone = pd.merge(milestone, epickey, left_on = 'Feature', right_on = 'Key', 
 #pointcount[pointcount['Milestone'].str.contains(item)]
 milestone= milestone.drop(['Feature', 'Key'], axis=1)
 now = time.perf_counter()
-milestone.to_excel('O:/IDW 2 Milestones.xlsx')
+milestone.to_excel('C:/IDW 2 Milestones.xlsx')
 print(f'Finished in loading issues in {round(now-starttimetoload, 2)} seconds')
 uniquemilestones = milestone.Milestone.unique()
 
@@ -188,7 +188,7 @@ for item in uniquemilestones:
     ax3.axvline(x=percent,ymin=.8,color='black')
     i=i+1
     ax3.axis('off')
-    fig.savefig('O:/' + item + '.pdf', orientation='landscape', bbox_inches='tight')
+    fig.savefig('C:/' + item + '.pdf', orientation='landscape', bbox_inches='tight')
     plt.close()
 
 
