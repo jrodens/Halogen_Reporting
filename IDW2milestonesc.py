@@ -99,7 +99,7 @@ milestone = pd.merge(milestone, epickey, left_on = 'Feature', right_on = 'Key', 
 #pointcount[pointcount['Milestone'].str.contains(item)]
 milestone= milestone.drop(['Feature', 'Key'], axis=1)
 now = time.perf_counter()
-milestone.to_excel('C:/IDW 2 Milestones.xlsx')
+#milestone.to_excel('C:/IDW 2 Milestones.xlsx')
 print(f'Finished in loading issues in {round(now-starttimetoload, 2)} seconds')
 uniquemilestones = milestone.Milestone.unique()
 
@@ -115,6 +115,7 @@ today = datetime.datetime.today()
 today = today.date()
 
 for item in uniquemilestones:
+    output = 'C:\\Users\\' + username + '\\OneDrive - TRowePrice\\'+ item + ' - ' + str(datetime.datetime.today().strftime('%Y%m%d')) +'.pdf'
     pointpercent = 0
     pointcount = pd.DataFrame()
     tempmilestone=pd.DataFrame()
@@ -165,9 +166,9 @@ for item in uniquemilestones:
     t = t.strftime("%B %d, %Y")
     now = np.busday_count(stemp,today)
     days= np.busday_count(stemp, ttemp)
-    print(now)
-    print(stemp)
-    print(ttemp)
+    #print(now)
+    #print(stemp)
+    #print(ttemp)
     if now <0:
         percent = 0
     elif ttemp < today:
@@ -188,7 +189,7 @@ for item in uniquemilestones:
     ax3.axvline(x=percent,ymin=.8,color='black')
     i=i+1
     ax3.axis('off')
-    fig.savefig('C:/' + item + '.pdf', orientation='landscape', bbox_inches='tight')
+    fig.savefig(output, orientation='landscape', bbox_inches='tight')
     plt.close()
 
 
