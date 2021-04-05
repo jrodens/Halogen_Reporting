@@ -1,0 +1,12 @@
+[peloton]
+username = jrodens
+password = sanchez26
+
+# Optional: Whether or not to ignore warnings that are thrown (default: True)
+ignore_warnings = True
+
+# Optional: Verify SSL Authenticity (default: True)
+ssl_verify = True
+
+# Optional: Filepath to a local cert bundle. Useful when SSL MITM is in play (default: None)
+ssl_cert = ''
