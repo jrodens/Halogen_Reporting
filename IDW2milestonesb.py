@@ -9,6 +9,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from pandas.io.json import json_normalize
 import time
 import datetime
+import plotly.express as px
 import matplotlib.patches as patches
 import numpy as np
 start = time.perf_counter()
@@ -46,8 +47,6 @@ Milestonestart=[]
 Milestoneend = []
 Milestonename = []
 Points = []
-ID=[]
-Sum=[]
 epickey = pd.DataFrame()
 milestonereference = pd.DataFrame()
 epic = jira.search_issues('project = idwh and issuetype = epic', maxResults=1000)
@@ -73,23 +72,16 @@ for item in milestones:
     Milestonestart.append(milestonestart)
     Milestoneend.append(milestoneend)
     Milestonename.append(m)
-    string = 'project = "IDW 2.0 – Hadron" and issuetype != Epic and issueFunction in linkedIssuesOfAll("fixVersion = ' + id + '")'
+    string = 'project = "IDW 2.0 – Hadron" and issuetype= story and issueFunction in linkedIssuesOfAll("fixVersion = ' + id + '")'
     story = jira.search_issues(string)
     for issue in story:
-        if S(issue.fields.status) == 'Rejected':
-            pass
-        else:
-            key = S(issue.key)
-            currentStatus = S(issue.fields.status)
-            summary = S(issue.fields.summary)
-            epic = S(issue.fields.customfield_10506)
-            Fix.append(fix)
-            CurrentStatus.append(currentStatus)
-            Feature.append(epic)
-            points = issue.fields.customfield_10502
-            Points.append(points)
-            ID.append(key)
-            Sum.append(summary)
+        currentStatus = S(issue.fields.status)
+        epic = S(issue.fields.customfield_10506)
+        Fix.append(fix)
+        CurrentStatus.append(currentStatus)
+        Feature.append(epic)
+        points = issue.fields.customfield_10502
+        Points.append(points)
 milestonereference.insert(0, "Milestone", Milestonename)
 milestonereference.insert(1, "Start", Milestonestart)
 milestonereference.insert(2, "End", Milestoneend)
@@ -97,18 +89,13 @@ milestone.insert(0,"Milestone", Fix)
 milestone.insert(1, "Status", CurrentStatus)
 milestone.insert(2, "Feature", Feature)
 milestone.insert(3, "Points", Points)
-milestone.insert(4, "ID", ID)
-milestone.insert(5, "Summary", Sum)
 milestone = milestone.replace(to_replace="Prioritized", value = "Not Started")
 milestone = milestone.replace(to_replace="Ready For Prioritization", value = "Not Started")
 milestone = milestone.replace(to_replace="Open", value= "Not Started")
 milestone = pd.merge(milestone, epickey, left_on = 'Feature', right_on = 'Key', how = 'left')
-#milestone = milestone[milestone['Status']
-#pointcount[pointcount['Milestone'].str.contains(item)]
-milestone= milestone.drop(['Feature'], axis=1)
+milestone= milestone.drop(['Feature', 'Key'], axis=1)
 now = time.perf_counter()
-excelsave = 'c:\\Users\\' + username + '\\OneDrive - Troweprice\\IDW2milestonesc.xlsx'
-milestone.to_excel(excelsave)
+
 print(f'Finished in loading issues in {round(now-starttimetoload, 2)} seconds')
 uniquemilestones = milestone.Milestone.unique()
 
@@ -117,36 +104,38 @@ tempdf=pd.DataFrame()
 color_dict = {'Accepted':'#7030A0','Dev': '#4472C4', 'Prioritized': '#C00000', 'Ready For Prioritization': '#002060', 'Blocked':'#FFC000','In Progress':'#002060','Not Started':'#C00000','QA':'#548235','Rejected':'#808080'}
 
 today= datetime.datetime(2020,10,16,0,0)
+'''
+output = 'O:/IDW2Gantt.pdf'
+with PdfPages(output) as pdf:
+    fig2= plt.figure()
+    ax2= fig2.add_subplot(111)
 
+    ax2.update_yaxes(autorange='reversed')
+    fig2.update_layout(shapes=[
+    	dict(
+    		type='line',
+    		yref='paper', y0=0, y1=1,
+    		xref='x', x0=today, x1=today
+    		)
+    	])
+    fig2.savefig('O:/IDW2Gantt.pdf', orientation='landscape', bbox_inches='tight')
+'''
 tempdf2 = pd.DataFrame()
 i=0
 today = datetime.datetime.today()
 today = today.date()
-
 for item in uniquemilestones:
-    output = 'C:\\Users\\' + username + '\\OneDrive - TRowePrice\\'+ item + ' - ' + str(datetime.datetime.today().strftime('%Y%m%d')) +'.pdf'
-    pointpercent = 0
-    pointcount = pd.DataFrame()
     tempmilestone=pd.DataFrame()
     fig = plt.figure()
     ax1 = fig.add_subplot(121) #top and bottom left (large)
     ax2 = fig.add_subplot(222) # top right
     ax3 = fig.add_subplot(224) #bottom right
-    notdone = milestone.groupby('Status').Points.agg(['sum'])
     tempdf = milestone
     tempdf2 = milestone
-    pointcount = milestone
     tempdf = tempdf[tempdf['Milestone'].str.contains(item)]
     tempdf = tempdf.groupby(["Epic", "Status"]).size()
     tempdf = tempdf.unstack()
-    pointcount = pointcount[pointcount['Milestone'].str.contains(item)]
-    pointcount = pointcount.groupby(['Status']).sum()
-    if 'Accepted' in pointcount.Points:
-        pointpercent = pointcount.Points['Accepted']
-
-    else:
-        pointpercent = 0
-    ax1.legend(["Not Started","In Progress","Blocked", "QA","Accepted"])
+    ax1.legend(["Open", "Ready for Prioritization","Prioritized","Needs More Info","Blocked","Dev","QA","Accepted"])
     ax1= tempdf.plot(ax=ax1, kind='bar',stacked=True, figsize=(20,10), color=[color_dict.get(x) for x in tempdf.columns], label = ["Not Started", "In Progress","Blocked","QA","Accepted"],title=item)
     tempdf2 = tempdf2[tempdf2['Milestone'].str.contains(item)]
     tempdf2 = tempdf2.groupby(['Status']).sum()
@@ -155,7 +144,6 @@ for item in uniquemilestones:
     ax2 = tempdf2.plot(ax=ax2, kind='barh', stacked=True, color=[color_dict.get(x) for x in tempdf.columns], legend = None, title="Milestone Status (by Story Points)")
     ax2.set_ylabel("")
     ax2.axis('off')
-    ax2.axvline(x=pointpercent, ymin = .8, ymax = .2, color='black')
     tempmilestone = milestonereference[milestonereference['Milestone'].str.contains(item)]
 #    ax3 = px.timeline(milestonereference, x_start=Milestonestart, x_end = Milestoneend, y=Milestonename)
     ax3.add_patch(
@@ -168,23 +156,20 @@ for item in uniquemilestones:
             fill=True
         )
     )
-    s=tempmilestone.Start[i].strftime("%B %d, %Y")
+    s=tempmilestone.Start[i].strftime("%B %m, %Y")
     t=datetime.datetime.strptime(tempmilestone.End[i], '%Y-%m-%d')
     ttemp = t.date()
     stemp = tempmilestone.Start[i].date()
-    t = t.strftime("%B %d, %Y")
+    t = t.strftime("%B %m, %Y")
     now = np.busday_count(stemp,today)
     days= np.busday_count(stemp, ttemp)
-    #print(now)
-    #print(stemp)
-    #print(ttemp)
     if now <0:
         percent = 0
-    elif ttemp < today:
+    elif now > 1:
         percent = 0
     else:
         percent = now/days
-
+    print(f'{item}: {percent}')
     s=S(s)
     t=S(t)
 
@@ -198,7 +183,7 @@ for item in uniquemilestones:
     ax3.axvline(x=percent,ymin=.8,color='black')
     i=i+1
     ax3.axis('off')
-    fig.savefig(output, orientation='landscape', bbox_inches='tight')
+    fig.savefig('O:/' + item + '.pdf', orientation='landscape', bbox_inches='tight')
     plt.close()
 
 

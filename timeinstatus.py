@@ -16,7 +16,7 @@ password = getpass.getpass(prompt="Enter Password")
 jira = JIRA(basic_auth = (username, password), options = {'server': 'https://jira.troweprice.com'})
 
 #Utilize Jira search function to identify any views on the Analyst board that links to the Halogen View epic
-datafromjson = jira.search_issues('project = NYC-IO-Surge-Testing AND "Service (NYCTT)" is not EMPTY and createdDate >= 2020-03-01 and createdDate < 2020-08-01 and "Consumer Application (NYCTT)" is not EMPTY and "Projects Impacted" is not EMPTY', maxResults=1000)
+datafromjson = jira.search_issues('project = NYC-IO-Surge-Testing and "Consumer Application (NYCTT)" = lens', maxResults=1000)
 
 class S(str):
     def __contains__(self, x):
@@ -44,9 +44,10 @@ for issue in datafromjson:
     issuefromjson = jira.issue(currentID, expand='changelog')
     changelog = issuefromjson.changelog
     date1 = datetime.datetime.strptime(issue.fields.created[0:10], '%Y-%m-%d')
-    service = issue.fields.customfield_21800.value
-    consumer = issue.fields.customfield_23201.value
-    project = issue.fields.customfield_21202.value
+    #service = issue.fields.customfield_21800.value
+    #consumer = issue.fields.customfield_23201.value
+    #project = issue.fields.customfield_21202.value
+    project = issue.fields.customfield_10506
     timeopen = 0
     open = 0
     intriage = 0
@@ -111,8 +112,8 @@ for issue in datafromjson:
     Needinfo.append(needinfo)
     Prioritized.append(prioritized)
     Ticket.append(currentID)
-    Service.append(service)
-    Consumer.append(consumer)
+    #Service.append(service)
+    #Consumer.append(consumer)
     Project.append(project)
 hinet.insert(0, "Ticket", Ticket)
 hinet.insert(1, "Open", Open)
@@ -124,8 +125,8 @@ hinet.insert(6,"QA", QA)
 hinet.insert(7,"QA Failed", QAfail)
 hinet.insert(8,"Blocked", Blocked)
 hinet.insert(9,"Need More Information", Needinfo)
-hinet.insert(10,"Service", Service)
-hinet.insert(11,"Consumer", Consumer)
-hinet.insert(12,"Project", Project)
+#hinet.insert(10,"Service", Service)
+#hinet.insert(11,"Consumer", Consumer)
+hinet.insert(10,"Project", Project)
 hinet.to_excel('O:/timespent.xlsx')
 print("Done!  Your ouput has been saved at {output}")

@@ -16,30 +16,37 @@ class S(str):
             if self.startswith(x,i): return 1
 
 link=[]
-df = pd.read_excel('o:/Book5.xlsx')
+df = pd.read_excel('o:/component.xlsx')
 for index, row in df.iterrows():
     summ= df.iloc[index,0]
     #quartile=df.iloc[index,1]
     #link = df.iloc[index,2]
    # quartile = S(quartile)
-    
+
     #synthesis=df.iloc[index,2]
-    description = df.iloc[index,6]
+    description = df.iloc[index,1]
     #epic=df.iloc[index,5]
     #acceptance = df.iloc[index,6]
     #desc = df.iloc[index,4]
     #linkto = df.iloc[index,1]
+    component = df.iloc[index, 2]
     print(summ)
     #print(desc)
     #print(linkto)
     issue_list = {
-    'project': {'key': 'PTOM'},
+    'project': {'key': 'IDWH'},
     'summary': summ,
     'customfield_10507':description,
     'issuetype': {'name': 'Epic'}
     }
 
     new_issue = jira.create_issue(fields=issue_list)
+    print(new_issue)
+    jira.issue(new_issue)
+    existingComponents=[]
+    for component in new_issue.fields.components:
+        existingComponents.append({component : component.name})
+    new_issue.update(fields={"components": existingComponents})
     print(new_issue)
 """
     if 'Q1' in quartile:
@@ -61,5 +68,5 @@ for index, row in df.iterrows():
     # print(new_link)
     #new_issue.update(fields={'components' : existingComponents})
 #df.insert(6, "Issue #", new_issue)
-#df.to_excel('o:/NYCRSATasks.xlsx')   
+#df.to_excel('o:/NYCRSATasks.xlsx')
 print('Done')

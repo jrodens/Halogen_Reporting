@@ -9,7 +9,6 @@ from matplotlib.backends.backend_pdf import PdfPages
 import datetime
 import numpy as np
 import matplotlib.ticker as ticker
-from matplotlib.dates import DateFormatter
 
 #Get User credentials for JIRA authorization
 username = input('Enter your user name: ')
@@ -18,7 +17,7 @@ jira = JIRA(basic_auth = (username, password), options = {'server': 'https://jir
 
 #Utilize Jira search function to identify any views on the Analyst board that links to the Halogen View epic
 datafromjson = jira.search_issues('project ="NYC-RIO-Surge-Transaction-Router-Testing"  AND issuetype = Defect', maxResults=1000)
-testcasesfromjson = jira.search_issues('project = "NYCRSTRT" AND issuetype= "Story" AND status != "Rejected" AND "Epic Link" = NYCRSTRT-147', maxResults=1000)
+testcasesfromjson = jira.search_issues('project = "NYCRSTRT" AND issuetype= "Story" AND status != "Rejected" and "Epic Link"=NYCRSTRT-135', maxResults=1000)
 
 #Class to give a string for comparing strings to string-like variables
 class S(str):
@@ -79,7 +78,7 @@ for issue in testcasesfromjson:
         pass
     Transtype.append(S(issue.fields.customfield_23301))
     labels =  S(issue.fields.labels)
-    if "IL" in labels:
+    if "il" in labels:
         group = "Investment Liaisons"
     elif "PTS" in labels:
         group = "Post Trade Services"
@@ -223,7 +222,6 @@ tempdf= pd.DataFrame()
 #fig1= plt.figure()
 fig1, (ax1,ax2,ax3) = plt.subplots(1,3, sharey=True, sharex= False)
 fig2 = plt.figure()
-fig3 = plt.figure()
 with PdfPages(output) as pdf:
     tempdf = testdf[testdf['User Group'].str.contains("Post Trade Services")]
     tempdf = tempdf.groupby(["Transaction Type", "Status"]).size()
@@ -250,8 +248,8 @@ with PdfPages(output) as pdf:
     fig1.suptitle("Test Case Status by Business Unit", fontsize=14, y=1.05, fontweight='bold')
     fig1.tight_layout()
 
-    ax4 = fig2.add_subplot(111)
-    ax5 = fig3.add_subplot(111)
+    ax4 = fig2.add_subplot(121)
+    ax5 = fig2.add_subplot(122)
 
     newdata = newdata.groupby(["Defects by Transaction Type", "Status"]).size()
     newdata = newdata.unstack()
@@ -265,22 +263,15 @@ with PdfPages(output) as pdf:
     ax4.tick_params(axis='x', labelsize=5)
     ax4.tick_params(axis='y', labelsize=5)
 
-    ax5 = plt.plot(ax=ax5, Dates, DefectCount)
+    ax5 = plt.plot(Dates, DefectCount)
     plt.xlabel("Date",labelpad = 23,fontsize=6)
     plt.ylabel("Number of Open Defects", fontsize=6)
     plt.title("Open Defects by Date",fontsize=7)
     plt.tick_params(axis='x', rotation=70, labelsize=5)
     plt.tick_params(axis='y', labelsize=5)
-    #date_form = DateFormatter("%m-%d")
-    for axis in [ax5.xaxis]:
-        axis.set_major_formatter(date_form)
-        axis.set_major_locator(mdates.WeekdayLocator(interval=1))
-    #for label in ax5.xaxis.get_ticklabels()[::3]:
-    #    label.set_visible(False)
-    #ax5.xaxis.set_major_locator(plt.MaxNLocator(10))
     fig2.tight_layout()
 
     pdf.savefig(fig1, orientation='landscape', bbox_inches="tight")
     pdf.savefig(fig2, orientation='landscape', bbox_inches="tight")
-    pdf.savefig(fig3, orientation='landscape', bbox_inches="tight")
+
 print(f"Done!  Your ouput has been saved at {output}")
