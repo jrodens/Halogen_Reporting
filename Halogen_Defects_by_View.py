@@ -15,7 +15,7 @@ jira = JIRA(basic_auth = (username, password), options = {'server': 'https://jir
 
 #Utilize Jira search function to identify any views on the Analyst board that links to the Halogen View epic
 datafromjson = jira.search_issues('project ="Halogen User Testing"  AND issuetype = "View" and "Program (HUT)" = "Data Entitlement"', maxResults=1000)
-datafromjson2 = jira.search_issues('project = "Halogen User Testing" AND issuetype = "Defect"', maxResults=1000)
+datafromjson2 = jira.search_issues('project = "Halogen User Testing" AND issuetype = "Defect" and "Program (HUT)" = "Data Entitlement"', maxResults=1000)
 
 #Class to give a string for comparing strings to string-like variables
 class S(str):
